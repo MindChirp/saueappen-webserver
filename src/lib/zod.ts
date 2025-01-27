@@ -16,7 +16,7 @@ const getNameSchema = () =>
     .max(50, "Name must be less than 50 characters");
 
 export const signUpSchema = object({
-  // name: getNameSchema(),
+  name: getNameSchema(),
   email: getEmailSchema(),
   password: getPasswordSchema("password"),
   // confirmPassword: getPasswordSchema("confirmPassword"),

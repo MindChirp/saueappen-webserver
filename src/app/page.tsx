@@ -1,12 +1,17 @@
 import Link from "next/link";
+import SignoutButton from "~/components/auth/signout-button";
 
 import { LatestPost } from "~/components/post";
+import { getServerSession } from "~/server/auth";
 import { api, HydrateClient } from "~/trpc/server";
 
 export default async function Home() {
   const hello = await api.post.hello({ text: "from tRPC" });
+  const session = await getServerSession();
 
-  void api.post.getLatest.prefetch();
+  if (session?.user) {
+    void api.post.getLatest.prefetch();
+  }
 
   return (
     <HydrateClient>
@@ -43,9 +48,26 @@ export default async function Home() {
             <p className="text-2xl text-white">
               {hello ? hello.greeting : "Loading tRPC query..."}
             </p>
+
+            <div className="flex flex-col items-center justify-center gap-4">
+              <p className="text-center text-2xl text-white">
+                {session && <span>Logged in as {session.user?.name}</span>}
+              </p>
+
+              {!session ? (
+                <Link
+                  href={session ? "/signout" : "/signin"}
+                  className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+                >
+                  {session ? "Sign out" : "Sign in"}
+                </Link>
+              ) : (
+                <SignoutButton />
+              )}
+            </div>
           </div>
 
-          <LatestPost />
+          {session?.user && <LatestPost />}
         </div>
       </main>
     </HydrateClient>

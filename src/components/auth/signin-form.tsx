@@ -1,6 +1,8 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import LoadingButton from "~/components/loading-button";
 import { Button } from "~/components/ui/button";
@@ -20,13 +22,20 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
+import { useToast } from "~/hooks/use-toast";
 import { cn } from "~/lib/utils";
 import { signInSchema, type SignInSchemaType } from "~/lib/zod";
+import { authClient } from "~/server/auth/client";
+import { type ErrorContext } from "@better-fetch/fetch";
 
 export function SigninForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [pendingCredentials, setPendingCredentials] = useState(false);
+
   const form = useForm<SignInSchemaType>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -35,8 +44,30 @@ export function SigninForm({
     },
   });
 
-  const onSubmit = async (values: SignInSchemaType) => {
-    console.log(values);
+  const handleCredentialsSignIn = async (values: SignInSchemaType) => {
+    await authClient.signIn.email(
+      {
+        email: values.email,
+        password: values.password,
+      },
+      {
+        onRequest: () => {
+          setPendingCredentials(true);
+        },
+        onSuccess: async () => {
+          router.push("/");
+          router.refresh();
+        },
+        onError: (ctx: ErrorContext) => {
+          console.log(ctx);
+          toast({
+            title: "Something went wrong",
+            description: ctx.error.message ?? "Something went wrong.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
   };
 
   return (
@@ -50,7 +81,10 @@ export function SigninForm({
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(handleCredentialsSignIn)}
+              className="space-y-6"
+            >
               {["email", "password"].map((field) => (
                 <FormField
                   control={form.control}
@@ -76,7 +110,9 @@ export function SigninForm({
                   )}
                 />
               ))}
-              <LoadingButton pending={false}>Sign in</LoadingButton>
+              <LoadingButton pending={pendingCredentials}>
+                Sign in
+              </LoadingButton>
               <Button type="button" variant="outline" className="w-full">
                 Login with Google
               </Button>

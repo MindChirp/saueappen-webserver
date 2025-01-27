@@ -1,6 +1,7 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import LoadingButton from "~/components/loading-button";
 import { Button } from "~/components/ui/button";
@@ -20,25 +21,51 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
+import { useToast } from "~/hooks/use-toast";
 import { cn } from "~/lib/utils";
 import { signUpSchema, type SignUpSchemaType } from "~/lib/zod";
+import { authClient } from "~/server/auth/client";
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const [pending, setPending] = useState(false);
+  const { toast } = useToast();
+
   const form = useForm<SignUpSchemaType>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
       name: "",
       email: "",
       password: "",
-      confirmPassword: "",
     },
   });
 
   const onSubmit = async (values: SignUpSchemaType) => {
-    console.log(values);
+    await authClient.signUp.email(
+      {
+        email: values.email,
+        password: values.password,
+        name: values.name,
+      },
+      {
+        onRequest: () => setPending(true),
+        onSuccess: () => {
+          toast({
+            title: "Account has been created.",
+          });
+        },
+        onError: (ctx) => {
+          console.log("error", ctx);
+          toast({
+            title: "Something went wrong",
+            description: ctx.error.message ?? "",
+          });
+        },
+      },
+    );
+    setPending(false);
   };
 
   return (
@@ -53,7 +80,7 @@ export function SignupForm({
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {["email", "password"].map((field) => (
+              {["name", "email", "password"].map((field) => (
                 <FormField
                   control={form.control}
                   key={field}
@@ -82,9 +109,9 @@ export function SignupForm({
                   )}
                 />
               ))}
-              <LoadingButton pending={false}>Sign up</LoadingButton>
+              <LoadingButton pending={pending}>Sign up</LoadingButton>
               <Button type="button" variant="outline" className="w-full">
-                Login with Google
+                Login with Googlepen2
               </Button>
               <div className="mt-4 text-center text-sm">
                 Already have an account?{" "}
