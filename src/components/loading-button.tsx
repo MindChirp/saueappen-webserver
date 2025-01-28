@@ -1,22 +1,23 @@
-import { Button } from "~/components/ui/button";
+import { Button, type ButtonProps } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 export default function LoadingButton({
   pending,
   children,
   onClick,
   className = "",
+  ...props
 }: {
   pending: boolean;
   children: React.ReactNode;
   onClick?: () => void;
   className?: string;
-}) {
+} & ButtonProps) {
   return (
     <Button
       onClick={onClick}
       className={cn("w-full", className)}
-      type="submit"
       disabled={pending}
+      {...props}
     >
       {pending ? (
         <div className="flex items-center justify-center">

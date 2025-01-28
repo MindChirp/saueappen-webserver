@@ -1,6 +1,7 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import LoadingButton from "~/components/loading-button";
@@ -32,7 +33,7 @@ export function SignupForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const [pending, setPending] = useState(false);
   const { toast } = useToast();
-
+  const router = useRouter();
   const form = useForm<SignUpSchemaType>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -55,6 +56,8 @@ export function SignupForm({
           toast({
             title: "Account has been created.",
           });
+
+          router.push("/");
         },
         onError: (ctx) => {
           console.log("error", ctx);
@@ -65,6 +68,7 @@ export function SignupForm({
         },
       },
     );
+
     setPending(false);
   };
 
@@ -110,9 +114,9 @@ export function SignupForm({
                 />
               ))}
               <LoadingButton pending={pending}>Sign up</LoadingButton>
-              <Button type="button" variant="outline" className="w-full">
-                Login with Googlepen2
-              </Button>
+              {/* <Button type="button" variant="outline" className="w-full"> */}
+              {/*   Login with Google */}
+              {/* </Button> */}
               <div className="mt-4 text-center text-sm">
                 Already have an account?{" "}
                 <Link href="/signin" className="underline underline-offset-4">

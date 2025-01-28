@@ -1,11 +1,11 @@
 "use client";
+import { type ErrorContext } from "@better-fetch/fetch";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import LoadingButton from "~/components/loading-button";
-import { Button } from "~/components/ui/button";
 import {
   Card,
   CardContent,
@@ -26,7 +26,6 @@ import { useToast } from "~/hooks/use-toast";
 import { cn } from "~/lib/utils";
 import { signInSchema, type SignInSchemaType } from "~/lib/zod";
 import { authClient } from "~/server/auth/client";
-import { type ErrorContext } from "@better-fetch/fetch";
 
 export function SigninForm({
   className,
@@ -35,6 +34,7 @@ export function SigninForm({
   const router = useRouter();
   const { toast } = useToast();
   const [pendingCredentials, setPendingCredentials] = useState(false);
+  const [pendingGithub, setPendingGithub] = useState(false);
 
   const form = useForm<SignInSchemaType>({
     resolver: zodResolver(signInSchema),
@@ -43,6 +43,33 @@ export function SigninForm({
       password: "",
     },
   });
+
+  const handleSignInWithGithub = async () => {
+    await authClient.signIn.social(
+      {
+        provider: "github",
+      },
+      {
+        onRequest: () => {
+          setPendingGithub(true);
+        },
+        onSuccess: async () => {
+          router.refresh();
+          // router.push("/");
+        },
+        onError: (ctx: ErrorContext) => {
+          console.log(ctx);
+          toast({
+            title: "Something went wrong",
+            description: ctx.error.message ?? "Something went wrong.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+
+    setPendingGithub(false);
+  };
 
   const handleCredentialsSignIn = async (values: SignInSchemaType) => {
     await authClient.signIn.email(
@@ -56,7 +83,6 @@ export function SigninForm({
         },
         onSuccess: async () => {
           router.push("/");
-          router.refresh();
         },
         onError: (ctx: ErrorContext) => {
           console.log(ctx);
@@ -68,6 +94,8 @@ export function SigninForm({
         },
       },
     );
+
+    setPendingCredentials(false);
   };
 
   return (
@@ -113,9 +141,15 @@ export function SigninForm({
               <LoadingButton pending={pendingCredentials}>
                 Sign in
               </LoadingButton>
-              <Button type="button" variant="outline" className="w-full">
-                Login with Google
-              </Button>
+              <LoadingButton
+                onClick={handleSignInWithGithub}
+                pending={pendingGithub}
+                type="button"
+                variant={"secondary"}
+                className="w-full"
+              >
+                Login with Github
+              </LoadingButton>
               <div className="mt-4 text-center text-sm">
                 Don&apos;t have an account?{" "}
                 <Link href="/signup" className="underline underline-offset-4">
