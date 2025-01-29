@@ -54,10 +54,10 @@ export function SignupForm({
         onRequest: () => setPending(true),
         onSuccess: () => {
           toast({
-            title: "Account has been created.",
+            title: "Account created",
+            description:
+              "Your account has been created. Check your email for a verification link.",
           });
-
-          router.push("/");
         },
         onError: (ctx) => {
           console.log("error", ctx);

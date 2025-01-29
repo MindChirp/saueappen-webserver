@@ -58,7 +58,6 @@ export function SigninForm({
           // router.push("/");
         },
         onError: (ctx: ErrorContext) => {
-          console.log(ctx);
           toast({
             title: "Something went wrong",
             description: ctx.error.message ?? "Something went wrong.",
