@@ -17,7 +17,7 @@ interface VerificationEmailTemplateProps {
   inviteLink: string;
 }
 
-export const VerificationEmailTemplate = ({
+const VerificationEmailTemplate = ({
   inviteLink,
 }: VerificationEmailTemplateProps) => {
   const previewText = `Verify Your Email Address.`;
@@ -30,7 +30,7 @@ export const VerificationEmailTemplate = ({
         <Body className="mx-auto my-auto bg-white px-2 font-sans">
           <Container className="mx-auto my-[40px] max-w-[465px] rounded border border-solid border-[#eaeaea] p-[20px]">
             <Heading className="mx-0 my-[30px] p-0 text-center text-[24px] font-normal text-black">
-              <strong>{previewText}</strong>
+              <strong>Verify Your Email Address</strong>
             </Heading>
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
@@ -52,6 +52,10 @@ export const VerificationEmailTemplate = ({
       </Tailwind>
     </Html>
   );
+};
+
+VerificationEmailTemplate.PreviewProps = {
+  inviteLink: "http://localhost:3000",
 };
 
 export default VerificationEmailTemplate;

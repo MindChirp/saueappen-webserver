@@ -1,6 +1,6 @@
 import { render } from "@react-email/render";
 import { Resend } from "resend";
-import VerificationEmailTemplate from "~/emails/verification-email";
+import { VerificationEmailTemplate } from "~/email-templates";
 import { env } from "~/env";
 
 export const resend = new Resend(env.RESERND_API_KEY);
