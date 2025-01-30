@@ -4,7 +4,10 @@ import { openAPI } from "better-auth/plugins";
 import { headers } from "next/headers";
 import { cache } from "react";
 import { env } from "~/env";
-import { sendVerificationEmail } from "~/server/auth/email";
+import {
+  sendResetPasswordEmail,
+  sendVerificationEmail,
+} from "~/server/auth/email";
 import { db } from "~/server/db";
 
 export const auth = betterAuth({
@@ -54,13 +57,20 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     autoSignIn: false,
+    sendResetPassword: async ({ user, url }) => {
+      const { error } = await sendResetPasswordEmail({
+        email: user.email,
+        verificationUrl: url,
+      });
+
+      if (error) return console.log("Email Error: ", error);
+    },
   },
   emailVerification: {
     sendOnSignUp: true,
     expiresIn: 60 * 60 * 1, // 1 HOUR
     autoSignInAfterVerification: true,
-    sendVerificationEmail: async ({ user, token, url }) => {
-      console.log("verfication_url", url);
+    sendVerificationEmail: async ({ user, token }) => {
       const verificationUrl = `${env.BETTER_AUTH_URL}/api/auth/verify-email?token=${token}&callbackURL=${env.EMAIL_VERIFICATION_CALLBACK_URL}`;
       const { error } = await sendVerificationEmail({
         email: user.email,

@@ -1,6 +1,7 @@
 "use client";
 import { type ErrorContext } from "@better-fetch/fetch";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Github } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -84,9 +85,8 @@ export function SigninForm({
           router.push("/");
         },
         onError: (ctx: ErrorContext) => {
-          console.log(ctx);
           toast({
-            title: "Something went wrong",
+            title: (ctx.error?.code as string) ?? "Something went wrong",
             description: ctx.error.message ?? "Something went wrong.",
             variant: "destructive",
           });
@@ -133,6 +133,16 @@ export function SigninForm({
                         />
                       </FormControl>
                       <FormMessage />
+                      {field === "password" && (
+                        <div className="flex">
+                          <Link
+                            href="/forgot-password"
+                            className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                          >
+                            Forgot your password?
+                          </Link>
+                        </div>
+                      )}
                     </FormItem>
                   )}
                 />
@@ -147,6 +157,7 @@ export function SigninForm({
                 variant={"secondary"}
                 className="w-full"
               >
+                <Github className="mr-1 h-4 w-4" />
                 Login with Github
               </LoadingButton>
               <div className="mt-4 text-center text-sm">
