@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { cache } from "react";
 import { env } from "~/env";
 import {
+  sendChangeEmailVerification,
   sendResetPasswordEmail,
   sendVerificationEmail,
 } from "~/server/auth/email";
@@ -30,10 +31,22 @@ export const auth = betterAuth({
   },
   user: {
     additionalFields: {
-      // premium :{
-      //   type: "boolean",
-      //   required: false,
-      // }
+      isPremium: {
+        type: "boolean",
+        required: true,
+      },
+    },
+    changeEmail: {
+      enabled: true,
+      sendChangeEmailVerification: async ({ newEmail, url }, _request) => {
+        const { error } = await sendChangeEmailVerification({
+          email: newEmail,
+          verificationUrl: url,
+        });
+
+        if (error)
+          return console.log("sendChangeEmailVerification Error: ", error);
+      },
     },
   },
   rateLimit: {
@@ -63,7 +76,7 @@ export const auth = betterAuth({
         verificationUrl: url,
       });
 
-      if (error) return console.log("Email Error: ", error);
+      if (error) return console.log("sendResetPasswordEmail Error: ", error);
     },
   },
   emailVerification: {
@@ -77,7 +90,7 @@ export const auth = betterAuth({
         verificationUrl: verificationUrl,
       });
 
-      if (error) return console.log("Email Error: ", error);
+      if (error) return console.log("sendVerificationEmail Error: ", error);
     },
   },
 } satisfies BetterAuthOptions);

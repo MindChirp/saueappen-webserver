@@ -1,6 +1,7 @@
 import { render } from "@react-email/render";
 import { Resend } from "resend";
 import {
+  ChangeEmailVerificationTemplate,
   ResetPasswordEmailTemplate,
   VerificationEmailTemplate,
 } from "~/email-templates";
@@ -36,9 +37,21 @@ export const sendResetPasswordEmail = async ({
     from: env.EMAIL_FROM,
     to: [email],
     subject: "Reset Password Link",
-    // html: await render(
-    //   VerificationEmailTemplate({ inviteLink: verificationUrl }),
-    // ),
     react: ResetPasswordEmailTemplate({ inviteLink: verificationUrl }),
+  });
+};
+
+export const sendChangeEmailVerification = async ({
+  email,
+  verificationUrl,
+}: {
+  email: string;
+  verificationUrl: string;
+}) => {
+  return await resend.emails.send({
+    from: env.EMAIL_FROM,
+    to: [email],
+    subject: "Reset Password Link",
+    react: ChangeEmailVerificationTemplate({ inviteLink: verificationUrl }),
   });
 };
