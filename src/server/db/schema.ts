@@ -48,6 +48,10 @@ export const user = createTable("user", {
   emailVerified: boolean("email_verified").notNull(),
   image: text("image"),
   isPremium: boolean("is_premium").notNull().default(false),
+  role: text("role"),
+  banned: boolean("banned"),
+  banReason: text("ban_reason"),
+  banExpires: timestamp("ban_expires"),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
     () => new Date(),
@@ -67,6 +71,7 @@ export const session = createTable("session", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id),
+  impersonatedBy: text("impersonated_by"),
 });
 
 export const account = createTable("account", {

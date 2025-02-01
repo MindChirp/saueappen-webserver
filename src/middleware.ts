@@ -5,7 +5,7 @@ import type { Session } from "~/server/auth";
 
 const authRoutes = ["/signin", "/signup"];
 const passwordRoutes = ["/reset-password", "/forgot-password"];
-// const adminRoutes = ["/admin"];
+const adminRoutes = ["/admin"];
 // const noAuthRoutes = ["/test"];
 
 export default async function authMiddleware(request: NextRequest) {
@@ -13,7 +13,7 @@ export default async function authMiddleware(request: NextRequest) {
 
   const isAuthRoute = authRoutes.includes(pathName);
   const isPasswordRoute = passwordRoutes.includes(pathName);
-  // const isAdminRoute = adminRoutes.includes(pathName);
+  const isAdminRoute = adminRoutes.includes(pathName);
   // const isOnlyProtectedRoutes = onlyProtectedRoutes.includes(pathName);
   // const isNoAuthRoute = noAuthRoutes.includes(pathName);
 
@@ -46,9 +46,9 @@ export default async function authMiddleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // if (isAdminRoute && session.user.role !== "admin") {
-  //   return NextResponse.redirect(new URL("/", request.url));
-  // }
+  if (isAdminRoute && session.user.role !== "admin") {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
 
   return NextResponse.next();
 }

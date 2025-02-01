@@ -1,6 +1,6 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { openAPI } from "better-auth/plugins";
+import { openAPI, admin } from "better-auth/plugins";
 import { headers } from "next/headers";
 import { cache } from "react";
 import { env } from "~/env";
@@ -16,11 +16,11 @@ export const auth = betterAuth({
     provider: "pg",
   }),
   plugins: [
-    openAPI(),
-    // admin({
-    //   impersonationSessionDuration: 60 * 60 * 24 * 7, // 7 days
-    // }),
-  ], // api/auth/reference
+    openAPI(), // /api/auth/reference
+    admin({
+      impersonationSessionDuration: 60 * 60 * 24 * 7, // 7 days
+    }),
+  ],
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
@@ -103,3 +103,4 @@ export const getServerSession = cache(
 );
 
 export type Session = typeof auth.$Infer.Session;
+export type AuthUserType = Session["user"];
