@@ -133,3 +133,33 @@ export const protectedProcedure = t.procedure
       },
     });
   });
+
+export const animaliaProcedure = t.procedure
+  .use(timingMiddleware)
+  .use(async ({ ctx, next }) => {
+    if (!ctx.session?.user || !ctx.session) {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+
+    const account = await ctx.db.query.account.findFirst({
+      where: (account, { eq, and }) =>
+        and(
+          eq(account.providerId, "animalia"),
+          eq(account.userId, ctx.session?.user.id ?? ""),
+        ),
+    });
+
+    console.log(account);
+
+    if (!account) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+      });
+    }
+
+    return next({
+      ctx: {
+        session: { ...ctx.session, user: ctx.session.user },
+      },
+    });
+  });

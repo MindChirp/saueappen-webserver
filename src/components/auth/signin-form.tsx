@@ -1,8 +1,7 @@
 "use client";
 import { type ErrorContext } from "@better-fetch/fetch";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Github } from "lucide-react";
-import Link from "next/link";
+import { Cat } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -14,19 +13,12 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "~/components/ui/form";
-import { Input } from "~/components/ui/input";
+import { Form } from "~/components/ui/form";
 import { useToast } from "~/hooks/use-toast";
 import { cn } from "~/lib/utils";
 import { signInSchema, type SignInSchemaType } from "~/lib/zod";
 import { authClient } from "~/server/auth/client";
+import Google from "../icons/google";
 
 export function SigninForm({
   className,
@@ -34,8 +26,9 @@ export function SigninForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const router = useRouter();
   const { toast } = useToast();
-  const [pendingCredentials, setPendingCredentials] = useState(false);
-  const [pendingGithub, setPendingGithub] = useState(false);
+  // const [pendingCredentials, setPendingCredentials] = useState(false);
+  const [pendingGoogle, setPendingGoogle] = useState(false);
+  const [pendingAnimalia, setPendingAnimalia] = useState(false);
 
   const form = useForm<SignInSchemaType>({
     resolver: zodResolver(signInSchema),
@@ -45,19 +38,14 @@ export function SigninForm({
     },
   });
 
-  const handleSignInWithGithub = async () => {
+  const handleSignInWithGoogle = async () => {
     await authClient.signIn.social(
       {
-        provider: "github",
+        provider: "google",
       },
       {
-        onRequest: () => {
-          setPendingGithub(true);
-        },
-        onSuccess: async () => {
-          router.refresh();
-          // router.push("/");
-        },
+        onRequest: () => setPendingGoogle(true),
+        onSuccess: async () => router.refresh(),
         onError: (ctx: ErrorContext) => {
           toast({
             title: "Something went wrong",
@@ -67,8 +55,32 @@ export function SigninForm({
         },
       },
     );
+  };
 
-    setPendingGithub(false);
+  const handleSignInWithAnimalia = async () => {
+    await authClient.signIn.oauth2(
+      {
+        providerId: "animalia",
+      },
+      {
+        onRequest: () => {
+          setPendingAnimalia(true);
+        },
+        onSuccess: async () => {
+          router.refresh();
+          // router.push("/");
+        },
+        onError: (ctx: ErrorContext) => {
+          toast({
+            title: "Something went wgithubrong",
+            description: ctx.error.message ?? "Something went wrong.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+
+    setPendingAnimalia(false);
   };
 
   const handleCredentialsSignIn = async (values: SignInSchemaType) => {
@@ -78,9 +90,6 @@ export function SigninForm({
         password: values.password,
       },
       {
-        onRequest: () => {
-          setPendingCredentials(true);
-        },
         onSuccess: async () => {
           router.push("/");
         },
@@ -93,17 +102,15 @@ export function SigninForm({
         },
       },
     );
-
-    setPendingCredentials(false);
   };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Signin</CardTitle>
+          <CardTitle className="text-2xl">Logg inn</CardTitle>
           <CardDescription>
-            Enter your email below to sign in to your account
+            Logg deg inn på Saueappen med en av alternativene nedenfor
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -112,7 +119,7 @@ export function SigninForm({
               onSubmit={form.handleSubmit(handleCredentialsSignIn)}
               className="space-y-6"
             >
-              {["email", "password"].map((field) => (
+              {/* {["email", "password"].map((field) => (
                 <FormField
                   control={form.control}
                   key={field}
@@ -149,23 +156,33 @@ export function SigninForm({
               ))}
               <LoadingButton pending={pendingCredentials}>
                 Sign in
-              </LoadingButton>
+              </LoadingButton> */}
               <LoadingButton
-                onClick={handleSignInWithGithub}
-                pending={pendingGithub}
+                onClick={handleSignInWithAnimalia}
+                pending={pendingAnimalia}
                 type="button"
                 variant={"secondary"}
                 className="w-full"
               >
-                <Github className="mr-1 h-4 w-4" />
-                Login with Github
+                <Cat className="mr-1 h-4 w-4" />
+                Logg inn med Animalia
               </LoadingButton>
-              <div className="mt-4 text-center text-sm">
+              <LoadingButton
+                pending={pendingGoogle}
+                type="button"
+                variant={"secondary"}
+                className="w-full"
+                onClick={handleSignInWithGoogle}
+              >
+                <Google />
+                Logg inn med Google
+              </LoadingButton>
+              {/* <div className="mt-4 text-center text-sm">
                 Don&apos;t have an account?{" "}
                 <Link href="/signup" className="underline underline-offset-4">
                   Sign up
                 </Link>
-              </div>
+              </div> */}
             </form>
           </Form>
         </CardContent>

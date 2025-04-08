@@ -1,6 +1,6 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { openAPI, admin } from "better-auth/plugins";
+import { openAPI, admin, genericOAuth, bearer } from "better-auth/plugins";
 import { headers } from "next/headers";
 import { cache } from "react";
 import { env } from "~/env";
@@ -19,6 +19,20 @@ export const auth = betterAuth({
     openAPI(), // /api/auth/reference
     admin({
       impersonationSessionDuration: 60 * 60 * 24 * 7, // 7 days
+    }),
+    bearer(),
+    genericOAuth({
+      config: [
+        {
+          clientId: env.ANIMALIA_CLIENT_ID,
+          clientSecret: env.ANIMALIA_CLIENT_SECRET,
+          providerId: "animalia",
+
+          discoveryUrl:
+            "https://staging-sso.animalia.no/.well-known/openid-configuration",
+          scopes: ["openid", "profile", "email"],
+        },
+      ],
     }),
   ],
   session: {
@@ -54,16 +68,21 @@ export const auth = betterAuth({
     max: 5, // max requests in the window
   },
   socialProviders: {
-    github: {
-      clientId: env.GITHUB_CLIENT_ID,
-      clientSecret: env.GITHUB_CLIENT_SECRET,
-      redirectURI: env.BETTER_AUTH_URL + "/api/auth/callback/github",
+    discord: {
+      clientId: env.DISCORD_CLIENT_ID,
+      clientSecret: env.DISCORD_CLIENT_SECRET,
+      redirectURI: env.BETTER_AUTH_URL + "/api/auth/callback/discord",
+    },
+    google: {
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     },
   },
+
   account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ["github"],
+      trustedProviders: ["discord"],
     },
   },
   emailAndPassword: {
