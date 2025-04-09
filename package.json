@@ -24,6 +24,7 @@
     "dist/server/api"
   ],
   "dependencies": {
+    "@better-auth/expo": "1.2.6-beta.8",
     "@better-fetch/fetch": "^1.1.18",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-label": "^2.1.1",
@@ -52,6 +53,7 @@
     "superjson": "^2.2.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "trpc-to-openapi": "^2.1.5",
     "zod": "^3.24.1"
   },
   "devDependencies": {

@@ -1,4 +1,5 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { expo } from "@better-auth/expo";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { openAPI, admin, genericOAuth, bearer } from "better-auth/plugins";
 import { headers } from "next/headers";
@@ -15,8 +16,10 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
+  trustedOrigins: ["myapp://"],
   plugins: [
     openAPI(), // /api/auth/reference
+    expo(),
     admin({
       impersonationSessionDuration: 60 * 60 * 24 * 7, // 7 days
     }),
@@ -27,10 +30,10 @@ export const auth = betterAuth({
           clientId: env.ANIMALIA_CLIENT_ID,
           clientSecret: env.ANIMALIA_CLIENT_SECRET,
           providerId: "animalia",
-
           discoveryUrl:
             "https://staging-sso.animalia.no/.well-known/openid-configuration",
           scopes: ["openid", "profile", "email"],
+          // redirectURI: env.BETTER_AUTH_URL + "/api/auth/callback/animalia",
         },
       ],
     }),
@@ -71,7 +74,7 @@ export const auth = betterAuth({
     discord: {
       clientId: env.DISCORD_CLIENT_ID,
       clientSecret: env.DISCORD_CLIENT_SECRET,
-      redirectURI: env.BETTER_AUTH_URL + "/api/auth/callback/discord",
+      // redirectURI: env.BETTER_AUTH_URL + "/api/auth/callback/discord",
     },
     google: {
       clientId: env.GOOGLE_CLIENT_ID,

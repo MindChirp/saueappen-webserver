@@ -72,7 +72,7 @@ export function SigninForm({
         },
         onError: (ctx: ErrorContext) => {
           toast({
-            title: "Something went wgithubrong",
+            title: "Something went wrong",
             description: ctx.error.message ?? "Something went wrong.",
             variant: "destructive",
           });
