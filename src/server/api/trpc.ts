@@ -13,6 +13,7 @@ import { auth } from "~/server/auth";
 
 import { db } from "~/server/db";
 import { type OpenApiMeta } from "trpc-to-openapi";
+import animalia from "./animalia/animalia-ctx";
 
 /**
  * 1. CONTEXT
@@ -33,6 +34,7 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
 
   return {
     db,
+    animalia,
     session,
     ...opts,
   };

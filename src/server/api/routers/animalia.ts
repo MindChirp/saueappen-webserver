@@ -1,45 +1,12 @@
-import { betterFetch } from "@better-fetch/fetch";
-import { animaliaProcedure, createTRPCRouter, publicProcedure } from "../trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-
-const SheepSchema = z.object({
-  id: z.number(),
-  selgerProdnr: z.string().nullable().optional(),
-  selgerNavn: z.string().nullable().optional(),
-  oremerke: z.string().optional(),
-  fodselindividnr: z.string().optional(),
-  fodselmedlemsnr: z.string().optional(),
-  fodselaar: z.number().optional(),
-  kaaringsnr: z.number().nullable(),
-  navn: z.string().nullable(),
-  kjopsdato: z.string().nullable(), // ISO date string
-  inndato: z.string().nullable(), // ISO date string
-  innkodeId: z.number().nullable(),
-  raseId: z.number().nullable(),
-  fodseldato: z.string().nullable(), // ISO date string
-  kjonnId: z.number().nullable(),
-  mor: z.string().nullable(),
-  morFodselaar: z.number().nullable(),
-  fostermor: z.string().nullable(),
-  fostermorFodselaar: z.number().nullable(),
-  far: z.string().nullable(),
-  farFodselaar: z.number().nullable(),
-  farKaaringsnr: z.number().nullable(),
-  farNavn: z.string().nullable(),
-  oppvekstkodeId: z.number().nullable(),
-  fravendtDato: z.string().nullable(), // ISO date string
-  fargeId: z.number().nullable(),
-  tegningMonsterId: z.number().nullable(),
-  fodselhjelpId: z.number().nullable(),
-  hornstatus: z.number().nullable(),
-  utrangeringsaarsakId: z.number().nullable(),
-  speneantall: z.number().nullable(),
-  beiteBingeId: z.number().nullable(),
-  beiteBingeInndato: z.string().nullable(), // ISO date string
-  utdato: z.string().nullable(), // ISO date string
-  utkodeId: z.number().nullable(),
-  kategorier: z.string().nullable(),
-});
+import {
+  AnimaliaResponse,
+  FetalEntry,
+  PastureEntry,
+  SheepSchema,
+} from "../animalia/animalia-ctx";
+import { animaliaProcedure, createTRPCRouter, publicProcedure } from "../trpc";
 
 export const animaliaRouter = createTRPCRouter({
   livestock: animaliaProcedure
@@ -49,14 +16,21 @@ export const animaliaRouter = createTRPCRouter({
         path: "/animalia/livestock",
       },
     })
-    .input(z.object({}))
+    .input(
+      z.object({
+        limit: z.number().optional().default(10),
+        offset: z.number().optional().default(0),
+        fromBirthYear: z.string().optional(),
+      }),
+    )
     .output(
       z.object({
         animals: z.array(SheepSchema),
       }),
     )
-    .query(async ({ ctx }) => {
+    .query(async ({ ctx, input }) => {
       // Get the access token from the accounts table in the drizzle database
+
       const account = await ctx.db.query.account.findFirst({
         where: (account, { eq }) =>
           eq(account.providerId, "animalia") &&
@@ -64,33 +38,39 @@ export const animaliaRouter = createTRPCRouter({
         columns: { accessToken: true },
       });
 
-      const { data, error } = await betterFetch<z.infer<typeof SheepSchema>[]>(
-        `https://test-sau.animalia.no/webservice/hentBesetning`,
-        {
-          headers: {
-            Authorization: `Bearer ${account?.accessToken}`,
-          },
-          query: {
-            prodnr: ctx.session.user.name,
-          },
-        },
-      );
+      if (!account) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "Du må være logget inn i animalia for å gjennomføre denne handlingen",
+        });
+      }
+
+      const { data, error } = await ctx.animalia.getLivestock({
+        accessToken: account.accessToken ?? "",
+        producerNumber: ctx.session.user.name,
+        fromBirthYear: input.fromBirthYear,
+      });
 
       if (error) {
-        throw new Error(`Error fetching data: ${error.message}`);
+        throw new Error(`Error fetching data: ${JSON.stringify(error)}`);
       }
-      const result = z
-        .object({
-          animals: z.array(SheepSchema),
-        })
-        .safeParse({
-          animals: data,
-        });
 
-      console.log(result.error);
+      /**
+       * This code can be used for debugging the schema if something is not right
+       */
+      // const result = z
+      //   .object({
+      //     animals: z.array(SheepSchema),
+      //   })
+      //   .safeParse({
+      //     animals: data,
+      //   });
+      //
+      //console.log(result.error);
 
       return {
-        animals: data,
+        animals: data.slice(input.offset, input.limit),
       };
     }),
   status: publicProcedure
@@ -103,9 +83,135 @@ export const animaliaRouter = createTRPCRouter({
     })
     .output(z.object({ status: z.string() }))
     .query(() => {
-      console.log("Got request");
       return {
         status: "ok",
       };
+    }),
+
+  registerPasture: animaliaProcedure
+    .input(
+      z.object({
+        registrations: z.array(PastureEntry.omit({ birthYear: true })),
+      }),
+    )
+    .meta({
+      openapi: {
+        method: "POST",
+        path: "/animalia/register-pasture",
+      },
+    })
+    .output(AnimaliaResponse)
+    .mutation(async ({ ctx, input }) => {
+      const account = await ctx.db.query.account.findFirst({
+        where: (account, { eq }) =>
+          eq(account.providerId, "animalia") &&
+          eq(account.userId, ctx.session.user.id),
+        columns: { accessToken: true },
+      });
+
+      const { data: livestock, error: livestockError } =
+        await ctx.animalia.getLivestock({
+          accessToken: account?.accessToken ?? "",
+          producerNumber: ctx.session.user.name,
+        });
+
+      if (livestockError)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: livestockError.message,
+        });
+
+      const birthYearMap = input.registrations.map((req) => ({
+        ...req,
+        birthYear:
+          livestock?.find(
+            (sheep) =>
+              sheep.oremerke === req.animalId.split(" ")[1]?.substring(7, 20),
+          )?.fodselaar ?? "",
+      })) as z.infer<typeof PastureEntry>[];
+
+      const { data, error } = await ctx.animalia.registerPasture({
+        accessToken: account?.accessToken ?? "",
+        producerNumber: ctx.session.user.name,
+        registrations: birthYearMap,
+      });
+
+      return data ?? [];
+    }),
+
+  registerFetalCount: animaliaProcedure
+    .meta({
+      openapi: {
+        method: "POST",
+        path: "/animalia/register-fetal-count",
+        contentTypes: ["application/json"],
+      },
+    })
+    .input(
+      z.object({
+        registrations: z.array(FetalEntry.omit({ birthYear: true })),
+      }),
+    )
+
+    .output(AnimaliaResponse)
+    .mutation(async ({ ctx, input }) => {
+      const account = await ctx.db.query.account.findFirst({
+        where: (account, { eq }) =>
+          eq(account.providerId, "animalia") &&
+          eq(account.userId, ctx.session.user.id),
+        columns: { accessToken: true },
+      });
+
+      const { data: livestock, error: livestockError } =
+        await ctx.animalia.getLivestock({
+          accessToken: account?.accessToken ?? "",
+          producerNumber: ctx.session.user.name,
+        });
+
+      console.log(livestockError);
+
+      if (livestockError)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: livestockError.message,
+        });
+
+      const birthYearMap = input.registrations.map(
+        (req) =>
+          ({
+            ...req,
+            birthYear:
+              livestock?.find(
+                (sheep) =>
+                  sheep.oremerke === req.ewe.split(" ")[1]?.substring(7, 20),
+              )?.fodselaar ?? "",
+          }) as z.infer<typeof FetalEntry>,
+      );
+
+      const { data, error } = await ctx.animalia.registerFetalCount({
+        accessToken: account?.accessToken ?? "",
+        producerNumber: ctx.session.user.name,
+        registrations: birthYearMap,
+      });
+
+      if (error) {
+        console.error(error);
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Error registering fetal count: ${JSON.stringify(error)}`,
+        });
+      }
+
+      // Map individual "individ" ids to VIDs
+      const mappedData = data?.map((reg) => {
+        return {
+          ...reg,
+          individ: reg.individ.split("/")[1]?.split(" ")[0] ?? "",
+        };
+      });
+
+      console.log(data);
+
+      return mappedData;
     }),
 });
