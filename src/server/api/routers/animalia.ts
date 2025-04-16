@@ -2,8 +2,8 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
   AnimaliaResponse,
-  FetalEntry,
   PastureEntry,
+  PastureSchema,
   SheepSchema,
 } from "../animalia/animalia-ctx";
 import { animaliaProcedure, createTRPCRouter, publicProcedure } from "../trpc";
@@ -31,23 +31,8 @@ export const animaliaRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       // Get the access token from the accounts table in the drizzle database
 
-      const account = await ctx.db.query.account.findFirst({
-        where: (account, { eq }) =>
-          eq(account.providerId, "animalia") &&
-          eq(account.userId, ctx.session.user.id),
-        columns: { accessToken: true },
-      });
-
-      if (!account) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message:
-            "Du må være logget inn i animalia for å gjennomføre denne handlingen",
-        });
-      }
-
       const { data, error } = await ctx.animalia.getLivestock({
-        accessToken: account.accessToken ?? "",
+        accessToken: ctx.accessToken,
         producerNumber: ctx.session.user.name,
         fromBirthYear: input.fromBirthYear,
       });
@@ -97,21 +82,14 @@ export const animaliaRouter = createTRPCRouter({
     .meta({
       openapi: {
         method: "POST",
-        path: "/animalia/register-pasture",
+        path: "/animalia/pasture",
       },
     })
     .output(AnimaliaResponse)
     .mutation(async ({ ctx, input }) => {
-      const account = await ctx.db.query.account.findFirst({
-        where: (account, { eq }) =>
-          eq(account.providerId, "animalia") &&
-          eq(account.userId, ctx.session.user.id),
-        columns: { accessToken: true },
-      });
-
       const { data: livestock, error: livestockError } =
         await ctx.animalia.getLivestock({
-          accessToken: account?.accessToken ?? "",
+          accessToken: ctx.accessToken,
           producerNumber: ctx.session.user.name,
         });
 
@@ -131,10 +109,20 @@ export const animaliaRouter = createTRPCRouter({
       })) as z.infer<typeof PastureEntry>[];
 
       const { data, error } = await ctx.animalia.registerPasture({
-        accessToken: account?.accessToken ?? "",
+        accessToken: ctx.accessToken,
         producerNumber: ctx.session.user.name,
         registrations: birthYearMap,
       });
+
+      if (error) {
+        console.error(error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Error registering pasture: ${JSON.stringify(error)}`,
+        });
+      }
+
+      console.log("DATA FROM REGISTRATION: ", data);
 
       return data ?? [];
     }),
@@ -149,26 +137,23 @@ export const animaliaRouter = createTRPCRouter({
     })
     .input(
       z.object({
-        registrations: z.array(FetalEntry.omit({ birthYear: true })),
+        registrations: z.array(
+          z.object({
+            ewe: z.string(),
+            date: z.string(),
+            fetusCount: z.number().min(0),
+          }),
+        ),
       }),
     )
 
     .output(AnimaliaResponse)
     .mutation(async ({ ctx, input }) => {
-      const account = await ctx.db.query.account.findFirst({
-        where: (account, { eq }) =>
-          eq(account.providerId, "animalia") &&
-          eq(account.userId, ctx.session.user.id),
-        columns: { accessToken: true },
-      });
-
       const { data: livestock, error: livestockError } =
         await ctx.animalia.getLivestock({
-          accessToken: account?.accessToken ?? "",
+          accessToken: ctx.accessToken,
           producerNumber: ctx.session.user.name,
         });
-
-      console.log(livestockError);
 
       if (livestockError)
         throw new TRPCError({
@@ -176,22 +161,39 @@ export const animaliaRouter = createTRPCRouter({
           message: livestockError.message,
         });
 
-      const birthYearMap = input.registrations.map(
-        (req) =>
-          ({
-            ...req,
-            birthYear:
-              livestock?.find(
-                (sheep) =>
-                  sheep.oremerke === req.ewe.split(" ")[1]?.substring(7, 20),
-              )?.fodselaar ?? "",
-          }) as z.infer<typeof FetalEntry>,
-      );
+      const birthYearMap = input.registrations.map((req) => {
+        const { individnr, medlemsnr } = ctx.animalia.getEIDParts(req.ewe);
+        return {
+          sheepnumber: individnr,
+          date: req.date,
+          fetusCount: req.fetusCount,
+          membernumber: medlemsnr,
+          birthYear:
+            livestock?.find((sheep) => {
+              return (
+                sheep.fodselindividnr === individnr &&
+                sheep.fodselmedlemsnr === medlemsnr
+              );
+            })?.fodselaar ?? "",
+        };
+      });
+
+      // console.log(birthYearMap.find((sheep) => sheep.ewe.includes("81097")));
 
       const { data, error } = await ctx.animalia.registerFetalCount({
-        accessToken: account?.accessToken ?? "",
+        accessToken: ctx.accessToken,
         producerNumber: ctx.session.user.name,
-        registrations: birthYearMap,
+        registrations: birthYearMap.map((reg) => ({
+          ewe:
+            reg.membernumber +
+            "/" +
+            reg.sheepnumber +
+            " (" +
+            reg.birthYear +
+            ")",
+          date: reg.date,
+          fetusCount: reg.fetusCount,
+        })),
       });
 
       if (error) {
@@ -210,8 +212,34 @@ export const animaliaRouter = createTRPCRouter({
         };
       });
 
-      console.log(data);
+      // console.log(mappedData);
+
+      // console.log(data);
 
       return mappedData;
+    }),
+  getPastures: animaliaProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: "/animalia/pastures",
+      },
+    })
+    .output(z.array(PastureSchema))
+    .input(z.undefined())
+    .query(async ({ ctx }) => {
+      const { data, error } = await ctx.animalia.getPastures({
+        accessToken: ctx.accessToken,
+        producerNumber: ctx.session.user.name,
+      });
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Error fetching pastures: ${JSON.stringify(error)}`,
+        });
+      }
+
+      return data;
     }),
 });

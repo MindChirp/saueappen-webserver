@@ -18,6 +18,13 @@ export const AnimaliaResponse = z.array(
   }),
 );
 
+export const PastureSchema = z.object({
+  id: z.number(),
+  aktiv: z.number(),
+  navn: z.string(),
+  beiteBingeTypeId: z.number(),
+});
+
 export const SheepSchema = z.object({
   id: z.number(),
   selgerProdnr: z.string().nullable().optional(),
@@ -66,10 +73,18 @@ export const PastureEntry = z.object({
 
 export const FetalEntry = z.object({
   ewe: z.string(),
-  birthYear: z.string(),
   date: z.string(),
   fetusCount: z.number().min(0),
 });
+
+export const getEIDParts = (ewe: string) => {
+  const parts = ewe.split(" ");
+  const individnr = parts[1]?.substring(7, 20);
+  return {
+    individnr,
+    medlemsnr: parts[1]?.substring(0, 7),
+  };
+};
 
 export const getLivestock = async ({
   fromBirthYear,
@@ -98,13 +113,7 @@ export const registerFetalCount = async ({
   registrations: z.infer<typeof FetalEntry>[];
 } & AuthCredentials) => {
   const data = registrations.map((reg) => ({
-    soye:
-      reg.ewe.split(" ")[1]?.substring(0, 7) +
-      "/" +
-      reg.ewe.split(" ")[1]?.substring(7, 20) +
-      "(" +
-      reg.birthYear +
-      ")",
+    soye: reg.ewe,
     dato: reg.date,
     antallFoster: reg.fetusCount,
   }));
@@ -117,6 +126,23 @@ export const registerFetalCount = async ({
       body: {
         prodnr: producerNumber,
         registreringer: data,
+      },
+    },
+  );
+};
+
+export const getPastures = async ({
+  accessToken,
+  producerNumber,
+}: AuthCredentials) => {
+  return betterFetch<z.infer<typeof PastureSchema>[]>(
+    `https://test-sau.animalia.no/webservice/hentBeiteBinge`,
+    {
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+      },
+      query: {
+        prodnr: producerNumber,
       },
     },
   );
@@ -148,10 +174,31 @@ export const registerPasture = async ({
   );
 };
 
+export const translateToAnimaliaIds = () => {
+  const birthYearMap = input.registrations.map((req) => {
+    const { individnr, medlemsnr } = ctx.animalia.getEIDParts(req.ewe);
+    return {
+      sheepnumber: individnr,
+      date: req.date,
+      fetusCount: req.fetusCount,
+      membernumber: medlemsnr,
+      birthYear:
+        livestock?.find((sheep) => {
+          return (
+            sheep.fodselindividnr === individnr &&
+            sheep.fodselmedlemsnr === medlemsnr
+          );
+        })?.fodselaar ?? "",
+    };
+  });
+};
+
 const animalia = {
   getLivestock,
   registerPasture,
+  getPastures,
   registerFetalCount,
+  getEIDParts,
 };
 
 export default animalia;

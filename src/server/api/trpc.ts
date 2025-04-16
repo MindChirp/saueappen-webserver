@@ -163,6 +163,7 @@ export const animaliaProcedure = t.procedure
 
     return next({
       ctx: {
+        accessToken: account.accessToken!,
         session: { ...ctx.session, user: ctx.session.user },
       },
     });
