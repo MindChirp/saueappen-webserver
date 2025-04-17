@@ -1,4 +1,5 @@
 import { betterFetch } from "@better-fetch/fetch";
+import { err, ok, Result } from "neverthrow";
 import { z } from "zod";
 
 interface AuthCredentials {
@@ -68,7 +69,6 @@ export const PastureEntry = z.object({
   animalId: z.string(),
   date: z.string(),
   pastureId: z.string(),
-  birthYear: z.string(),
 });
 
 export const FetalEntry = z.object({
@@ -174,23 +174,46 @@ export const registerPasture = async ({
   );
 };
 
-export const translateToAnimaliaIds = () => {
-  const birthYearMap = input.registrations.map((req) => {
-    const { individnr, medlemsnr } = ctx.animalia.getEIDParts(req.ewe);
+type AnimaliaId = {
+  sheepnumber?: string;
+  membernumber?: string;
+  birthYear: string | number;
+  animaliaID?: string;
+};
+
+export const translateToAnimaliaIds = async ({
+  EIDs,
+  accessToken,
+  producerNumber,
+}: { EIDs: string[] } & AuthCredentials): Promise<
+  Result<AnimaliaId[], { message?: string; status: number; statusText: string }>
+> => {
+  const { data: livestock, error: livestockError } = await getLivestock({
+    accessToken: accessToken,
+    producerNumber: producerNumber,
+  });
+
+  if (livestockError) return err(livestockError);
+
+  const birthYearMap = EIDs.map((i) => {
+    const { individnr, medlemsnr } = getEIDParts(i);
+    const birthYear =
+      livestock?.find((sheep) => {
+        return (
+          sheep.fodselindividnr === individnr &&
+          sheep.fodselmedlemsnr === medlemsnr
+        );
+      })?.fodselaar ?? "";
+
     return {
       sheepnumber: individnr,
-      date: req.date,
-      fetusCount: req.fetusCount,
       membernumber: medlemsnr,
-      birthYear:
-        livestock?.find((sheep) => {
-          return (
-            sheep.fodselindividnr === individnr &&
-            sheep.fodselmedlemsnr === medlemsnr
-          );
-        })?.fodselaar ?? "",
+      birthYear,
+      animaliaID: `${medlemsnr}/${individnr} (${birthYear})`,
     };
   });
+
+  return ok(birthYearMap);
 };
 
 const animalia = {
@@ -198,6 +221,7 @@ const animalia = {
   registerPasture,
   getPastures,
   registerFetalCount,
+  translateToAnimaliaIds,
   getEIDParts,
 };
 

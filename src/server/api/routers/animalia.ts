@@ -76,7 +76,7 @@ export const animaliaRouter = createTRPCRouter({
   registerPasture: animaliaProcedure
     .input(
       z.object({
-        registrations: z.array(PastureEntry.omit({ birthYear: true })),
+        registrations: z.array(PastureEntry),
       }),
     )
     .meta({
@@ -87,44 +87,47 @@ export const animaliaRouter = createTRPCRouter({
     })
     .output(AnimaliaResponse)
     .mutation(async ({ ctx, input }) => {
-      const { data: livestock, error: livestockError } =
-        await ctx.animalia.getLivestock({
-          accessToken: ctx.accessToken,
-          producerNumber: ctx.session.user.name,
-        });
+      const ids = await ctx.animalia.translateToAnimaliaIds({
+        accessToken: ctx.accessToken,
+        producerNumber: ctx.session.user.name,
+        EIDs: input.registrations.map((reg) => reg.animalId),
+      });
 
-      if (livestockError)
+      if (ids.isErr()) {
+        console.error(ids.error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: livestockError.message,
+          message: `Error translating EIDs to Animalia IDs: ${JSON.stringify(
+            ids.error,
+          )}`,
         });
-
-      const birthYearMap = input.registrations.map((req) => ({
-        ...req,
-        birthYear:
-          livestock?.find(
-            (sheep) =>
-              sheep.oremerke === req.animalId.split(" ")[1]?.substring(7, 20),
-          )?.fodselaar ?? "",
-      })) as z.infer<typeof PastureEntry>[];
+      }
 
       const { data, error } = await ctx.animalia.registerPasture({
         accessToken: ctx.accessToken,
         producerNumber: ctx.session.user.name,
-        registrations: birthYearMap,
+        registrations: ids.value.map((reg, index) => ({
+          date: input.registrations[index]?.date!,
+          animalId: reg.animaliaID!,
+          pastureId: input.registrations[index]?.pastureId!,
+        })),
       });
 
       if (error) {
-        console.error(error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: `Error registering pasture: ${JSON.stringify(error)}`,
         });
       }
 
-      console.log("DATA FROM REGISTRATION: ", data);
+      const mappedData = data?.map((reg) => {
+        return {
+          ...reg,
+          individ: reg.individ.split("/")[1]?.split(" ")[0] ?? "",
+        };
+      });
 
-      return data ?? [];
+      return mappedData;
     }),
 
   registerFetalCount: animaliaProcedure
@@ -149,50 +152,29 @@ export const animaliaRouter = createTRPCRouter({
 
     .output(AnimaliaResponse)
     .mutation(async ({ ctx, input }) => {
-      const { data: livestock, error: livestockError } =
-        await ctx.animalia.getLivestock({
-          accessToken: ctx.accessToken,
-          producerNumber: ctx.session.user.name,
-        });
-
-      if (livestockError)
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: livestockError.message,
-        });
-
-      const birthYearMap = input.registrations.map((req) => {
-        const { individnr, medlemsnr } = ctx.animalia.getEIDParts(req.ewe);
-        return {
-          sheepnumber: individnr,
-          date: req.date,
-          fetusCount: req.fetusCount,
-          membernumber: medlemsnr,
-          birthYear:
-            livestock?.find((sheep) => {
-              return (
-                sheep.fodselindividnr === individnr &&
-                sheep.fodselmedlemsnr === medlemsnr
-              );
-            })?.fodselaar ?? "",
-        };
+      const ids = await ctx.animalia.translateToAnimaliaIds({
+        accessToken: ctx.accessToken,
+        producerNumber: ctx.session.user.name,
+        EIDs: input.registrations.map((reg) => reg.ewe),
       });
 
-      // console.log(birthYearMap.find((sheep) => sheep.ewe.includes("81097")));
+      if (ids.isErr()) {
+        console.error(ids.error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Error translating EIDs to Animalia IDs: ${JSON.stringify(
+            ids.error,
+          )}`,
+        });
+      }
 
       const { data, error } = await ctx.animalia.registerFetalCount({
         accessToken: ctx.accessToken,
         producerNumber: ctx.session.user.name,
-        registrations: birthYearMap.map((reg) => ({
-          ewe:
-            reg.membernumber +
-            "/" +
-            reg.sheepnumber +
-            " (" +
-            reg.birthYear +
-            ")",
-          date: reg.date,
-          fetusCount: reg.fetusCount,
+        registrations: ids.value.map((reg, index) => ({
+          ewe: reg.animaliaID!,
+          date: input.registrations[index]?.date!,
+          fetusCount: input.registrations[index]?.fetusCount!,
         })),
       });
 
@@ -212,9 +194,7 @@ export const animaliaRouter = createTRPCRouter({
         };
       });
 
-      // console.log(mappedData);
-
-      // console.log(data);
+      console.log(mappedData);
 
       return mappedData;
     }),
@@ -242,4 +222,15 @@ export const animaliaRouter = createTRPCRouter({
 
       return data;
     }),
+
+  // This will be completed in another PR
+  // registerReleaseToPasture: animaliaProcedure
+  // .meta({
+  //   openapi: {
+  //     method: "POST",
+  //     path: "/animalia/release-to-pasture",
+  //   }
+  // }).output(AnimaliaResponse).input(z.object({
+  //   sheepId
+  // }))
 });
