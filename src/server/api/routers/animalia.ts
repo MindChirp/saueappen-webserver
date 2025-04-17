@@ -107,9 +107,9 @@ export const animaliaRouter = createTRPCRouter({
         accessToken: ctx.accessToken,
         producerNumber: ctx.session.user.name,
         registrations: ids.value.map((reg, index) => ({
-          date: input.registrations[index]?.date!,
-          animalId: reg.animaliaID!,
-          pastureId: input.registrations[index]?.pastureId!,
+          date: input.registrations[index]?.date ?? "",
+          animalId: reg.animaliaID ?? "",
+          pastureId: input.registrations[index]?.pastureId ?? "",
         })),
       });
 
