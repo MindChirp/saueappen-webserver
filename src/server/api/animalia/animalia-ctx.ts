@@ -86,6 +86,11 @@ export const getEIDParts = (ewe: string) => {
   };
 };
 
+/**
+ * This function retrieves livestock entries for a given producer number and access token.
+ * @param param0
+ * @returns List of livestock entries
+ */
 export const getLivestock = async ({
   fromBirthYear,
   accessToken,
@@ -105,6 +110,11 @@ export const getLivestock = async ({
   );
 };
 
+/**
+ * This function registers fetal count entries for a given producer number and access token.
+ * @param param0
+ * @returns List of issues relating to the registration
+ */
 export const registerFetalCount = async ({
   accessToken,
   producerNumber,
@@ -131,6 +141,11 @@ export const registerFetalCount = async ({
   );
 };
 
+/**
+ * This function retrieves pasture entries for a given producer number and access token.
+ * @param param0
+ * @returns List of pastures
+ */
 export const getPastures = async ({
   accessToken,
   producerNumber,
@@ -148,6 +163,11 @@ export const getPastures = async ({
   );
 };
 
+/**
+ * This function registers pasture entries for a given producer number and access token.
+ * @param param0
+ * @returns List of issues relating to the registration
+ */
 export const registerPasture = async ({
   accessToken,
   producerNumber,
@@ -181,6 +201,12 @@ type AnimaliaId = {
   animaliaID?: string;
 };
 
+/**
+ * This function translates standard EIDs in the format of 555 555555555555 (where 5 are random numbers) to the supported
+ * Animalia ID format of 5555555/55555 (yyyy) (where 5 are random numbers and yyyy is the birth year).
+ * @param param0
+ * @returns
+ */
 export const translateToAnimaliaIds = async ({
   EIDs,
   accessToken,
@@ -216,6 +242,9 @@ export const translateToAnimaliaIds = async ({
   return ok(birthYearMap);
 };
 
+/**
+ * Barrel export for adding all functions to the trpc context
+ */
 const animalia = {
   getLivestock,
   registerPasture,
