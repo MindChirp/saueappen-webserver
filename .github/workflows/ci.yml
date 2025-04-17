@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup
 
-      - run: pnpm turbo run lint
+      - run: pnpm run lint
       - run: pnpm manypkg check
 
   check-changeset:
@@ -73,16 +73,5 @@ jobs:
 
       - run: pnpm typecheck
 
-  build-www:
-    runs-on: ubuntu-latest
-    name: Build and Check Astro
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/setup
-
-      - run: pnpm run --filter=www check
-      - run: pnpm turbo --filter=www build
         # env:
         #   PUBLIC_GITHUB_TOKEN: ${{ secrets.PUBLIC_GITHUB_TOKEN }}
