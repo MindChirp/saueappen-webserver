@@ -71,7 +71,6 @@ export function SigninForm({
           // router.push("/");
         },
         onError: (ctx: ErrorContext) => {
-          console.log(ctx);
           toast({
             title: "Something went wrong",
             description: ctx.error.message ?? "Something went wrong.",
@@ -111,7 +110,7 @@ export function SigninForm({
         <CardHeader>
           <CardTitle className="text-2xl">Logg inn</CardTitle>
           <CardDescription>
-            Logg deg inn på Saueappen med en av alternativene nedenfor
+            Logg deg inn på Saueappen med et av alternativene nedenfor
           </CardDescription>
         </CardHeader>
         <CardContent>
