@@ -171,11 +171,19 @@ export const animaliaRouter = createTRPCRouter({
       const { data, error } = await ctx.animalia.registerFetalCount({
         accessToken: ctx.accessToken,
         producerNumber: ctx.session.user.name,
-        registrations: ids.value.map((reg, index) => ({
-          ewe: reg.animaliaID!,
-          date: input.registrations[index]?.date!,
-          fetusCount: input.registrations[index]?.fetusCount!,
-        })),
+        registrations: ids.value.map((reg, index) => {
+          if (input.registrations[index]?.fetusCount == undefined)
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Fetal count is undefined for ewe ${reg.animaliaID}`,
+            });
+
+          return {
+            ewe: reg.animaliaID!,
+            date: input.registrations[index]?.date ?? "",
+            fetusCount: input.registrations[index]?.fetusCount,
+          };
+        }),
       });
 
       if (error) {
