@@ -65,7 +65,6 @@ export default function UsersTable() {
             <TableCell>{user.email}</TableCell>
             <TableCell>{user.role}</TableCell>
             <TableCell>{user.emailVerified ? "Yes" : "No"}</TableCell>
-            <TableCell>{user.isPremium ? "Yes" : "No"}</TableCell>
             <TableCell>
               {user.banned ? (
                 <span className="text-red-500">Banned</span>
