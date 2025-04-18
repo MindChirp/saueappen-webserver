@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@better-auth/expo':
-        specifier: 1.2.6-beta.8
-        version: 1.2.6-beta.8(better-auth@1.2.5(typescript@5.8.3))
+        specifier: 1.2.5
+        version: 1.2.5(better-auth@1.2.5(typescript@5.8.3))
       '@better-fetch/fetch':
         specifier: ^1.1.18
         version: 1.1.18
@@ -48,7 +48,7 @@ importers:
         specifier: ^11.0.0-rc.446
         version: 11.0.3(typescript@5.8.3)
       better-auth:
-        specifier: ^1.1.14
+        specifier: 1.2.5
         version: 1.2.5(typescript@5.8.3)
       class-variance-authority:
         specifier: ^0.7.1
@@ -65,6 +65,9 @@ importers:
       lucide-react:
         specifier: ^0.474.0
         version: 0.474.0(react@18.3.1)
+      neverthrow:
+        specifier: ^8.2.0
+        version: 8.2.0
       next:
         specifier: ^15.0.1
         version: 15.2.4(@babel/core@7.24.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -232,10 +235,10 @@ packages:
     resolution: {integrity: sha512-H45s8fVLYjbhFH62dIJ3WtmJ6RSPt/3DRO0ZcT2SUiYiQyz3BLVb9ADEnLl91m74aQPS3AzzeajZHYOalWe3bg==}
     engines: {node: '>=6.9.0'}
 
-  '@better-auth/expo@1.2.6-beta.8':
-    resolution: {integrity: sha512-euH2jwRli2lO8tfcFyx9wjYCPFvxkuc6kc48cTmuZu080EDB23aRFAT1yTtVZp5kQgfb4TO9dybiBiSYDUezUg==}
+  '@better-auth/expo@1.2.5':
+    resolution: {integrity: sha512-rHddnBX192YHtJfhegWihowz5VWebKwlwyqVcSmzCIhOnxvYRo2aEPfIB5qci87hivEOXIiDubul9vsoWJjXnA==}
     peerDependencies:
-      better-auth: 1.2.6-beta.6
+      better-auth: 1.2.5
 
   '@better-auth/utils@0.2.4':
     resolution: {integrity: sha512-ayiX87Xd5sCHEplAdeMgwkA0FgnXsEZBgDn890XHHwSWNqqRZDYOq3uj2Ei2leTv1I2KbG5HHn60Ah1i2JWZjQ==}
@@ -3024,6 +3027,10 @@ packages:
     resolution: {integrity: sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==}
     engines: {node: '>= 0.6'}
 
+  neverthrow@8.2.0:
+    resolution: {integrity: sha512-kOCT/1MCPAxY5iUV3wytNFUMUolzuwd/VF/1KCx7kf6CutrOsTie+84zTGTpgQycjvfLdBBdvBvFLqFD2c0wkQ==}
+    engines: {node: '>=18'}
+
   next@15.1.2:
     resolution: {integrity: sha512-nLJDV7peNy+0oHlmY2JZjzMfJ8Aj0/dd3jCwSZS8ZiO5nkQfcZRqDrRN3U5rJtqVTQneIOGZzb6LCNrk7trMCQ==}
     engines: {node: ^18.18.0 || ^19.8.0 || >= 20.0.0}
@@ -4023,7 +4030,7 @@ snapshots:
       '@babel/helper-string-parser': 7.25.9
       '@babel/helper-validator-identifier': 7.25.9
 
-  '@better-auth/expo@1.2.6-beta.8(better-auth@1.2.5(typescript@5.8.3))':
+  '@better-auth/expo@1.2.5(better-auth@1.2.5(typescript@5.8.3))':
     dependencies:
       '@better-fetch/fetch': 1.1.18
       better-auth: 1.2.5(typescript@5.8.3)
@@ -6591,6 +6598,10 @@ snapshots:
   natural-compare@1.4.0: {}
 
   negotiator@0.6.3: {}
+
+  neverthrow@8.2.0:
+    optionalDependencies:
+      '@rollup/rollup-linux-x64-gnu': 4.39.0
 
   next@15.1.2(@babel/core@7.24.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:

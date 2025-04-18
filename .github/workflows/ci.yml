@@ -1,0 +1,58 @@
+# this workflow will run on every pr to make sure the project is following the guidelines
+
+# after labeler, run other actions with strict permissions
+name: CI
+
+on:
+  pull_request:
+    branches: ["*"]
+  merge_group:
+
+env:
+  SKIP_ENV_VALIDATION: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Run ESLint
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+
+      - run: pnpm run lint
+
+  prettier:
+    runs-on: ubuntu-latest
+    name: Run Prettier
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+
+      - run: pnpm format:check
+
+  tsc:
+    runs-on: ubuntu-latest
+    name: Run Typechecker
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+
+      - run: pnpm typecheck
+
+  build:
+    runs-on: ubuntu-latest
+    name: Build project
+    needs: [lint, prettier, tsc]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+
+        # env:
+        #   PUBLIC_GITHUB_TOKEN: ${{ secrets.PUBLIC_GITHUB_TOKEN }}

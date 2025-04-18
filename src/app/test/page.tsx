@@ -4,7 +4,7 @@ const getMsg = async () => {
   try {
     const msg = await api.post.getSecretMessage();
     return msg;
-  } catch (error) {
+  } catch (_) {
     return "⛔ Error";
   }
 };
