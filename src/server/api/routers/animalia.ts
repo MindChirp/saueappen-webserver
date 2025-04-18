@@ -202,8 +202,6 @@ export const animaliaRouter = createTRPCRouter({
         };
       });
 
-      console.log(mappedData);
-
       return mappedData;
     }),
   getPastures: animaliaProcedure
