@@ -3,7 +3,7 @@ import AnimaliaRequest from "~/components/animalia-request";
 import SignoutButton from "~/components/auth/signout-button";
 
 import { LatestPost } from "~/components/post";
-import { getServerSession } from "~/server/auth";
+import { getServerSession } from "~/server/auth/auth";
 import { api, HydrateClient } from "~/trpc/server";
 
 export default async function Home() {

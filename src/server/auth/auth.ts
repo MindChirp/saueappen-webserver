@@ -94,12 +94,10 @@ export const auth = betterAuth({
   // },
 } satisfies BetterAuthOptions);
 
-export const getServerSession = cache(
-  async () =>
-    await auth.api.getSession({
-      headers: await headers(),
-    }),
-);
+export const getServerSession = async () =>
+  await auth.api.getSession({
+    headers: await headers(),
+  });
 
 export type Session = typeof auth.$Infer.Session;
 export type AuthUserType = Session["user"];

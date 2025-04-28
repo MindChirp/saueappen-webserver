@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { type AuthUserType } from "~/server/auth";
+import { type AuthUserType } from "~/server/auth/auth";
 import { authClient } from "~/server/auth/client";
 // import ImpersonateUser from "./impersonate-user";
 
