@@ -1,10 +1,7 @@
-import { api } from "~/trpc/server";
-
 const getMsg = async () => {
   try {
-    const msg = await api.post.getSecretMessage();
-    return msg;
-  } catch (_) {
+    return "";
+  } catch {
     return "⛔ Error";
   }
 };
