@@ -9,7 +9,7 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
-import { auth } from "~/server/auth";
+import { auth } from "~/server/auth/auth";
 
 import { db } from "~/server/db";
 import { type OpenApiMeta } from "trpc-to-openapi";
@@ -155,7 +155,7 @@ export const animaliaProcedure = t.procedure
         ),
     });
 
-    if (!account) {
+    if (!account?.accessToken) {
       throw new TRPCError({
         code: "FORBIDDEN",
       });
@@ -163,7 +163,7 @@ export const animaliaProcedure = t.procedure
 
     return next({
       ctx: {
-        accessToken: account.accessToken!,
+        accessToken: account.accessToken,
         session: { ...ctx.session, user: ctx.session.user },
       },
     });

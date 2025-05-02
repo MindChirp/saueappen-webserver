@@ -1,5 +1,6 @@
 import { betterFetch } from "@better-fetch/fetch";
-import { err, ok, Result } from "neverthrow";
+import { err, ok } from "neverthrow";
+import type { Result } from "neverthrow";
 import { z } from "zod";
 
 interface AuthCredentials {

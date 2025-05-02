@@ -26,6 +26,7 @@ export const session = pgTable("session", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   impersonatedBy: text("impersonated_by"),
+  offlineExpiry: timestamp("offline_expiry"),
 });
 
 export const account = pgTable("account", {
