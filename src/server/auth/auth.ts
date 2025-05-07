@@ -30,23 +30,20 @@ export const auth = betterAuth({
           providerId: "animalia",
           discoveryUrl:
             "https://staging-sso.animalia.no/.well-known/openid-configuration",
-          scopes: ["openid", "profile", "email"],
+          scopes: ["openid", "profile", "email", "offline_access"],
         },
       ],
     }),
   ],
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
-    updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
+    updateAge: 60 * 29, // 29 minutes (every 29 minutes the session expiration is updated)
     cookieCache: {
       enabled: true,
       maxAge: 5 * 60, // Cache duration in seconds
     },
   },
-  rateLimit: {
-    window: 60, // time window in seconds
-    max: 5, // max requests in the window
-  },
+
   socialProviders: {
     discord: {
       clientId: env.DISCORD_CLIENT_ID,

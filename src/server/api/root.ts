@@ -1,5 +1,6 @@
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 import { animaliaRouter } from "./routers/animalia";
+import { loggingRouter } from "./routers/logging";
 
 /**
  * This is the primary router for your server.
@@ -8,6 +9,7 @@ import { animaliaRouter } from "./routers/animalia";
  */
 export const appRouter = createTRPCRouter({
   animalia: animaliaRouter,
+  logging: loggingRouter,
 });
 
 // export type definition of API
