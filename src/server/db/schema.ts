@@ -1,7 +1,7 @@
 // Example model schema from the Drizzle docs
 // https://orm.drizzle.team/docs/sql-schema-declaration
 
-import { pgTableCreator, text } from "drizzle-orm/pg-core";
+import { pgTable, text } from "drizzle-orm/pg-core";
 
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -9,9 +9,8 @@ import { pgTableCreator, text } from "drizzle-orm/pg-core";
  *
  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
  */
-export const createTable = pgTableCreator((name) => `t3_better_auth_${name}`);
 
-export const log = createTable("log", {
+export const log = pgTable("log", {
   id: text("id").primaryKey(),
   appVersion: text("app_version").notNull(),
   timestamp: text("timestamp").notNull(),
