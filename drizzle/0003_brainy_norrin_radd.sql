@@ -1,0 +1,1 @@
+ALTER TABLE "t3_better_auth_log" RENAME TO "log";
