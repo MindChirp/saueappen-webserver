@@ -17,6 +17,8 @@ export default async function authMiddleware(request: NextRequest) {
   // const isOnlyProtectedRoutes = onlyProtectedRoutes.includes(pathName);
   // const isNoAuthRoute = noAuthRoutes.includes(pathName);
 
+  console.log("API: ", JSON.stringify(request));
+
   // if (isNoAuthRoute) {
   //   return NextResponse.next();
   // }
@@ -31,8 +33,6 @@ export default async function authMiddleware(request: NextRequest) {
       },
     },
   );
-
-  // console.log("Session: ", session);
 
   if (!session) {
     if (isAuthRoute || isPasswordRoute) {

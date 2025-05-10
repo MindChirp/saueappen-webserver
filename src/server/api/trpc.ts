@@ -108,6 +108,17 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
   return result;
 });
 
+const loggingMiddleware = t.middleware(async ({ next, path, input }) => {
+  const result = await next();
+  // console.log(result);
+  // Log request details (e.g., path, input, etc.)
+  console.log(`[TRPC] Request to ${path}`);
+  // You can also log the input if needed
+  console.log(`[TRPC] Input: ${JSON.stringify(input)}`);
+
+  return result;
+});
+
 /**
  * Public (unauthenticated) procedure
  *
@@ -142,6 +153,7 @@ export const protectedProcedure = t.procedure
 
 export const animaliaProcedure = t.procedure
   .use(timingMiddleware)
+  .use(loggingMiddleware)
   .use(async ({ ctx, next }) => {
     if (!ctx.session?.user || !ctx.session) {
       throw new TRPCError({ code: "UNAUTHORIZED" });

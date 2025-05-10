@@ -1,4 +1,4 @@
-import { betterFetch } from "@better-fetch/fetch";
+import { betterFetch, createFetch } from "@better-fetch/fetch";
 import { err, ok } from "neverthrow";
 import type { Result } from "neverthrow";
 import { z } from "zod";
@@ -7,6 +7,14 @@ interface AuthCredentials {
   accessToken: string;
   producerNumber: string;
 }
+
+const $fetch = createFetch({
+  baseURL: "https://test-sau.animalia.no",
+  onRequest: (ctx) => {
+    console.log("Request to animalia: ", ctx);
+    return ctx;
+  },
+});
 
 export const AnimaliaResponse = z.array(
   z.object({
@@ -97,18 +105,15 @@ export const getLivestock = async ({
   accessToken,
   producerNumber,
 }: { fromBirthYear?: string } & AuthCredentials) => {
-  return betterFetch<z.infer<typeof SheepSchema>[]>(
-    `https://test-sau.animalia.no/webservice/hentBesetning`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      query: {
-        prodnr: producerNumber,
-        fraFodselsaar: fromBirthYear,
-      },
+  return $fetch<z.infer<typeof SheepSchema>[]>(`/webservice/hentBesetning`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
     },
-  );
+    query: {
+      prodnr: producerNumber,
+      fraFodselsaar: fromBirthYear,
+    },
+  });
 };
 
 /**
@@ -128,8 +133,8 @@ export const registerFetalCount = async ({
     dato: reg.date,
     antallFoster: reg.fetusCount,
   }));
-  return betterFetch<z.infer<typeof AnimaliaResponse>>(
-    `https://test-sau.animalia.no/webservice/registrerFostertelling`,
+  return $fetch<z.infer<typeof AnimaliaResponse>>(
+    `/webservice/registrerFostertelling`,
     {
       headers: {
         authorization: `Bearer ${accessToken}`,
@@ -151,17 +156,14 @@ export const getPastures = async ({
   accessToken,
   producerNumber,
 }: AuthCredentials) => {
-  return betterFetch<z.infer<typeof PastureSchema>[]>(
-    `https://test-sau.animalia.no/webservice/hentBeiteBinge`,
-    {
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-      },
-      query: {
-        prodnr: producerNumber,
-      },
+  return $fetch<z.infer<typeof PastureSchema>[]>(`/webservice/hentBeiteBinge`, {
+    headers: {
+      authorization: `Bearer ${accessToken}`,
     },
-  );
+    query: {
+      prodnr: producerNumber,
+    },
+  });
 };
 
 /**
@@ -176,8 +178,8 @@ export const registerPasture = async ({
 }: {
   registrations: z.infer<typeof PastureEntry>[];
 } & AuthCredentials) => {
-  return betterFetch<z.infer<typeof AnimaliaResponse>>(
-    `https://test-sau.animalia.no/webservice/registrerBeiteBinge`,
+  return $fetch<z.infer<typeof AnimaliaResponse>>(
+    `/webservice/registrerBeiteBinge`,
     {
       method: "POST",
       body: {
