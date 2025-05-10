@@ -1,6 +1,6 @@
-import { betterFetch, createFetch } from "@better-fetch/fetch";
-import { err, ok } from "neverthrow";
+import { createFetch } from "@better-fetch/fetch";
 import type { Result } from "neverthrow";
+import { err, ok } from "neverthrow";
 import { z } from "zod";
 
 interface AuthCredentials {
@@ -8,6 +8,7 @@ interface AuthCredentials {
   producerNumber: string;
 }
 
+// Create a fetch client with a hook for logging requests
 const $fetch = createFetch({
   baseURL: "https://test-sau.animalia.no",
   onRequest: (ctx) => {
