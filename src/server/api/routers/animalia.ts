@@ -33,7 +33,7 @@ export const animaliaRouter = createTRPCRouter({
 
       const { data, error } = await ctx.animalia.getLivestock({
         accessToken: ctx.accessToken,
-        producerNumber: ctx.session.user.name,
+        producerNumber: ctx.producernumer,
         fromBirthYear: input.fromBirthYear,
       });
 
