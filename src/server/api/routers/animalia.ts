@@ -89,7 +89,7 @@ export const animaliaRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const ids = await ctx.animalia.translateToAnimaliaIds({
         accessToken: ctx.accessToken,
-        producerNumber: ctx.session.user.name,
+        producerNumber: ctx.producernumer,
         EIDs: input.registrations.map((reg) => reg.animalId),
       });
 
@@ -105,7 +105,7 @@ export const animaliaRouter = createTRPCRouter({
 
       const { data, error } = await ctx.animalia.registerPasture({
         accessToken: ctx.accessToken,
-        producerNumber: ctx.session.user.name,
+        producerNumber: ctx.producernumer,
         registrations: ids.value.map((reg, index) => ({
           date: input.registrations[index]?.date ?? "",
           animalId: reg.animaliaID ?? "",
@@ -154,7 +154,7 @@ export const animaliaRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const ids = await ctx.animalia.translateToAnimaliaIds({
         accessToken: ctx.accessToken,
-        producerNumber: ctx.session.user.name,
+        producerNumber: ctx.producernumer,
         EIDs: input.registrations.map((reg) => reg.ewe),
       });
 
@@ -170,7 +170,7 @@ export const animaliaRouter = createTRPCRouter({
 
       const { data, error } = await ctx.animalia.registerFetalCount({
         accessToken: ctx.accessToken,
-        producerNumber: ctx.session.user.name,
+        producerNumber: ctx.producernumer,
         registrations: ids.value.map((reg, index) => {
           if (input.registrations[index]?.fetusCount == undefined)
             throw new TRPCError({
@@ -216,7 +216,7 @@ export const animaliaRouter = createTRPCRouter({
     .query(async ({ ctx }) => {
       const { data, error } = await ctx.animalia.getPastures({
         accessToken: ctx.accessToken,
-        producerNumber: ctx.session.user.name,
+        producerNumber: ctx.producernumer,
       });
 
       if (error) {
